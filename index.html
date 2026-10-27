@@ -1,0 +1,59 @@
+const name = document.createElement("div");
+        name.className = "market-name";
+        name.textContent = cryptoNames[id];
+
+        const value = document.createElement("div");
+        value.className = "market-price";
+        value.textContent = price == null
+          ? "Нет данных"
+          : formatMoney(price, "usd");
+
+        const symbol = document.createElement("div");
+        symbol.className = "market-symbol";
+        symbol.textContent = symbols[id];
+
+        item.append(name, value, symbol);
+        marketList.appendChild(item);
+      });
+    }
+
+    amountInput.addEventListener("input", render);
+    cryptoSelect.addEventListener("change", render);
+    fiatSelect.addEventListener("change", render);
+
+    document.getElementById("swap").addEventListener("click", () => {
+      // Поменять выбранные валюты местами можно только тогда,
+      // когда исходная валюта является поддерживаемой фиатной.
+      // Поэтому здесь меняется направление через пересчёт
+      // эквивалентной суммы в выбранной криптовалюте.
+      const crypto = cryptoSelect.value;
+      const fiat = fiatSelect.value;
+      const price = prices[crypto]?.[fiat];
+      const amount = Number(amountInput.value);
+
+      if (!price || !Number.isFinite(amount) || amount < 0) {
+        statusEl.textContent = "Сначала дождитесь загрузки курса.";
+        return;
+      }
+
+      amountInput.value = (amount * price).toPrecision(10);
+      statusEl.textContent =
+        "Сумма пересчитана. Выберите нужные валюты.";
+      render();
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      amountInput.value = "1";
+      cryptoSelect.value = "bitcoin";
+      fiatSelect.value = "usd";
+      render();
+    });
+
+    loadPrices();
+
+    // Периодически обновляем котировки. API может ограничивать
+    // частоту запросов, поэтому предусмотрена обработка ошибок.
+    setInterval(loadPrices, 60000);
+  </script>
+</body>
+</html>
